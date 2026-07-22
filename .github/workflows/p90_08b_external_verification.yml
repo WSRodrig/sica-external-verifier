@@ -1,0 +1,94 @@
+name: P90-08B External Independent Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_url:
+        description: "URL of the p90_08b_handoff.tar.gz bundle"
+        required: true
+        type: string
+      bundle_sha256:
+        description: "Expected SHA256 digest of p90_08b_handoff.tar.gz"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  verify:
+    name: Execute Isolated External Sandbox Verifier
+    environment: p90-08b-production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Verifier Code
+        uses: actions/checkout@v4
+
+      - name: Download Handoff Bundle
+        run: |
+          curl --fail --location \
+            "${{ inputs.bundle_url }}" \
+            --output handoff.tar.gz
+
+      - name: Verify Bundle SHA256 Digest
+        env:
+          EXPECTED_SHA256: ${{ inputs.bundle_sha256 }}
+        run: |
+          ACTUAL="$(sha256sum handoff.tar.gz | awk '{print $1}')"
+          echo "Expected: $EXPECTED_SHA256"
+          echo "Actual:   $ACTUAL"
+          test "$ACTUAL" = "$EXPECTED_SHA256"
+
+      - name: Extract Handoff Bundle
+        run: |
+          mkdir handoff evidence
+          tar --extract \
+              --gzip \
+              --file handoff.tar.gz \
+              --directory handoff
+
+      - name: Build Verifier Container
+        run: |
+          docker build -t sica-verifier:latest ./stage90_external_verifier/external_trust_root
+
+      - name: Execute Isolated Docker Verifier
+        run: |
+          docker run --rm \
+            --read-only \
+            --network none \
+            --user 65532:65532 \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 64 \
+            --memory 1g \
+            --cpus 1 \
+            --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m \
+            --mount type=bind,src="$PWD/handoff",dst=/handoff,readonly \
+            --mount type=bind,src="$PWD/evidence",dst=/evidence \
+            sica-verifier:latest
+
+      - name: Package External Evidence
+        run: |
+          tar -czf p90_08b_external_evidence.tar.gz -C evidence .
+
+      - name: Attest External Evidence Artifact
+        uses: actions/attest@v1
+        with:
+          subject-path: p90_08b_external_evidence.tar.gz
+
+      - name: Attest Ledger Checkpoint Receipt
+        uses: actions/attest@v1
+        with:
+          subject-path: evidence/ledger_checkpoint_receipt.json
+
+      - name: Upload External Evidence Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: p90_08b_external_evidence
+          path: |
+            p90_08b_external_evidence.tar.gz
+            evidence/p90_08b_external_execution_certificate.json
+            evidence/ledger_checkpoint_receipt.json
