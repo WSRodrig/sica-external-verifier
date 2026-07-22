@@ -79,13 +79,13 @@ jobs:
         uses: actions/attest@v1
         with:
           subject-path: p90_08b_external_evidence.tar.gz
-          predicate-type: https://slsa.dev/provenance/v1
+          predicate-path: evidence/p90_08b_external_execution_certificate.json
 
       - name: Attest Ledger Checkpoint Receipt
         uses: actions/attest@v1
         with:
           subject-path: evidence/ledger_checkpoint_receipt.json
-          predicate-type: https://slsa.dev/provenance/v1
+          predicate-path: evidence/ledger_checkpoint_receipt.json
 
       - name: Upload External Evidence Artifacts
         uses: actions/upload-artifact@v4
