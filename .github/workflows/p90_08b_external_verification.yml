@@ -45,6 +45,7 @@ jobs:
       - name: Extract Handoff Bundle
         run: |
           mkdir handoff evidence
+          chmod 777 evidence
           tar --extract \
               --gzip \
               --file handoff.tar.gz \
