@@ -76,21 +76,21 @@ jobs:
           tar -czf p90_08b_external_evidence.tar.gz -C evidence .
 
       - name: Attest External Evidence Artifact
-        uses: actions/attest@31885b5d72f107c13289053075c12f45c26f0923 # v1.5.0
+        uses: actions/attest@1f3ca2fbe3d1c724d701286b30c7d90309029739 # v2
         with:
           subject-path: p90_08b_external_evidence.tar.gz
           predicate-type: https://in-toto.io/attestation/v1
           predicate-path: evidence/p90_08b_external_execution_certificate.json
 
       - name: Attest Ledger Checkpoint Receipt
-        uses: actions/attest@31885b5d72f107c13289053075c12f45c26f0923 # v1.5.0
+        uses: actions/attest@1f3ca2fbe3d1c724d701286b30c7d90309029739 # v2
         with:
           subject-path: evidence/ledger_checkpoint_receipt.json
           predicate-type: https://in-toto.io/attestation/v1
           predicate-path: evidence/ledger_checkpoint_receipt.json
 
       - name: Upload External Evidence Artifacts
-        uses: actions/upload-artifact@65c4c4a1ddef5b8228a8a8927845341c2c317f0f # v4.6.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: p90_08b_external_evidence
           path: |
