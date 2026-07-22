@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Verifier Container
         run: |
-          docker build -t sica-verifier:latest ./stage90_external_verifier/external_trust_root
+          docker build -t sica-verifier:latest .
 
       - name: Execute Isolated Docker Verifier
         run: |
